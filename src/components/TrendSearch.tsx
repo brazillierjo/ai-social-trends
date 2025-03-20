@@ -11,6 +11,14 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { searchTrends } from "@/lib/twitter";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
 
 interface Trend {
   id: string;
@@ -19,17 +27,14 @@ interface Trend {
   count: number;
 }
 
+const ITEMS_PER_PAGE = 5;
+
 export function TrendSearch() {
   const [query, setQuery] = useState("");
   const [trends, setTrends] = useState<Trend[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
-  console.log(process.env.NEXT_PUBLIC_HUGGINGFACE_API_KEY);
-  console.log(process.env.TWITTER_API_KEY);
-  console.log(process.env.TWITTER_API_SECRET);
-  console.log(process.env.TWITTER_ACCESS_TOKEN);
-  console.log(process.env.TWITTER_ACCESS_TOKEN_SECRET);
+  const [currentPage, setCurrentPage] = useState(1);
 
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -37,6 +42,7 @@ export function TrendSearch() {
 
     setIsLoading(true);
     setError(null);
+    setCurrentPage(1);
 
     try {
       const results = await searchTrends(query);
@@ -49,6 +55,15 @@ export function TrendSearch() {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const totalPages = Math.ceil(trends.length / ITEMS_PER_PAGE);
+  const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+  const endIndex = startIndex + ITEMS_PER_PAGE;
+  const currentTrends = trends.slice(startIndex, endIndex);
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
   };
 
   return (
@@ -80,7 +95,7 @@ export function TrendSearch() {
         {error && <div className="text-red-500 mb-4 text-sm">{error}</div>}
 
         <div className="space-y-4">
-          {trends.map((trend) => (
+          {currentTrends.map((trend) => (
             <Card key={trend.id}>
               <CardContent className="pt-6">
                 <div className="flex justify-between items-start">
@@ -96,6 +111,47 @@ export function TrendSearch() {
             </Card>
           ))}
         </div>
+
+        {trends.length > 0 && (
+          <div className="mt-6">
+            <Pagination>
+              <PaginationContent>
+                <PaginationItem>
+                  <PaginationPrevious
+                    onClick={() => handlePageChange(currentPage - 1)}
+                    className={
+                      currentPage === 1 ? "pointer-events-none opacity-50" : ""
+                    }
+                  />
+                </PaginationItem>
+
+                {Array.from({ length: totalPages }, (_, i) => i + 1).map(
+                  (page) => (
+                    <PaginationItem key={page}>
+                      <PaginationLink
+                        onClick={() => handlePageChange(page)}
+                        isActive={currentPage === page}
+                      >
+                        {page}
+                      </PaginationLink>
+                    </PaginationItem>
+                  )
+                )}
+
+                <PaginationItem>
+                  <PaginationNext
+                    onClick={() => handlePageChange(currentPage + 1)}
+                    className={
+                      currentPage === totalPages
+                        ? "pointer-events-none opacity-50"
+                        : ""
+                    }
+                  />
+                </PaginationItem>
+              </PaginationContent>
+            </Pagination>
+          </div>
+        )}
       </CardContent>
     </Card>
   );
