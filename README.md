@@ -60,7 +60,7 @@ npm run dev
 
 ## Technologies utilisées
 
-- Next.js 14
+- Next.js
 - TypeScript
 - Tailwind CSS
 - shadcn/ui
