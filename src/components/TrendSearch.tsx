@@ -10,6 +10,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { searchTrends } from "@/lib/twitter";
 
 interface Trend {
   id: string;
@@ -22,31 +23,32 @@ export function TrendSearch() {
   const [query, setQuery] = useState("");
   const [trends, setTrends] = useState<Trend[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  console.log(process.env.NEXT_PUBLIC_HUGGINGFACE_API_KEY);
+  console.log(process.env.TWITTER_API_KEY);
+  console.log(process.env.TWITTER_API_SECRET);
+  console.log(process.env.TWITTER_ACCESS_TOKEN);
+  console.log(process.env.TWITTER_ACCESS_TOKEN_SECRET);
 
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!query.trim()) return;
+    if (!query.trim() || isLoading) return;
 
     setIsLoading(true);
-    // TODO: Implémenter l&apos;appel à l&apos;API Twitter
-    // Pour l&apos;instant, on simule des données
-    setTimeout(() => {
-      setTrends([
-        {
-          id: "1",
-          title: "#ExampleTrend",
-          description: "Une tendance d&apos;exemple",
-          count: 1000,
-        },
-        {
-          id: "2",
-          title: "@ExampleUser",
-          description: "Un utilisateur populaire",
-          count: 500,
-        },
-      ]);
+    setError(null);
+
+    try {
+      const results = await searchTrends(query);
+      setTrends(results);
+    } catch (err) {
+      setError(
+        "Une erreur est survenue lors de la recherche. Veuillez réessayer."
+      );
+      console.error("Erreur de recherche:", err);
+    } finally {
       setIsLoading(false);
-    }, 1000);
+    }
   };
 
   return (
@@ -68,11 +70,14 @@ export function TrendSearch() {
             }
             placeholder="Entrez un tag ou un nom d'utilisateur..."
             className="flex-1"
+            disabled={isLoading}
           />
           <Button type="submit" disabled={isLoading}>
             {isLoading ? "Recherche..." : "Rechercher"}
           </Button>
         </form>
+
+        {error && <div className="text-red-500 mb-4 text-sm">{error}</div>}
 
         <div className="space-y-4">
           {trends.map((trend) => (
