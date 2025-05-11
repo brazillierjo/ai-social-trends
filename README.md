@@ -32,7 +32,6 @@ npm install
 
 3. Configurez les variables d&apos;environnement :
 
-- Copiez le fichier `.env.local.example` vers `.env.local`
 - Remplissez les variables d&apos;environnement avec vos clés API
 
 4. Lancez l&apos;application en mode développement :
